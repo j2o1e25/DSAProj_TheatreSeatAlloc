@@ -8,7 +8,7 @@ GitHub Pages deploys the browser app from the `main` branch using `.github/workf
 
 <https://j2o1e25.github.io/DSAProj_TheatreSeatAlloc/>
 
-In the repository’s **Settings → Pages**, choose **GitHub Actions** as the build and deployment source if it has not already been selected. To make the repository’s **About** link open the website, edit the About section and set its **Website** field to the URL above.
+Before the first deployment, a repository administrator must enable Pages in **Settings → Pages** and choose **GitHub Actions** as the build and deployment source. The workflow cannot enable Pages itself because GitHub does not grant that administrative permission to `GITHUB_TOKEN`. To make the repository’s **About** link open the website, edit the About section and set its **Website** field to the URL above.
 
 GitHub Pages hosts a static site, so reservations there are saved in that browser on that device; they are not sent to the C server or shared with other visitors. Use the local C server below for reservations held by the backend while it is running.
 
