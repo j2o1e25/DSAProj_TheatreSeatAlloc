@@ -12,6 +12,8 @@ const selectedSeats = document.getElementById('seatCount');
 const availableCount = document.getElementById('availableCount');
 const bookedCount = document.getElementById('bookedCount');
 const totalCount = document.getElementById('totalCount');
+const isGitHubPages = location.hostname.endsWith('.github.io');
+const storageKey = 'the-grand-seat-reservations';
 
 let seats = [];
 let selectedSeatNo = null;
@@ -119,6 +121,23 @@ async function readResponse(response) {
 async function refreshSeats() {
   seatGrid.setAttribute('aria-busy', 'true');
   try {
+    if (isGitHubPages) {
+      const savedSeats = localStorage.getItem(storageKey);
+      seats = savedSeats ? JSON.parse(savedSeats) : Array.from({ length: 10 }, (_, index) => ({
+        seatNo: index + 1,
+        booked: false,
+        customerName: 'Available',
+      }));
+      if (!Array.isArray(seats) || seats.length !== 10 || seats.some((seat, index) =>
+        seat.seatNo !== index + 1 || typeof seat.booked !== 'boolean' ||
+        typeof seat.customerName !== 'string' || seat.customerName.length > 49)) {
+        throw new Error('Saved seat data is invalid. Clear this site’s browser storage to reset bookings.');
+      }
+      render();
+      setMessage('The website is ready. Bookings are saved in this browser on this device.', 'info');
+      return;
+    }
+
     const response = await fetch('/api/seats');
     seats = await readResponse(response);
     if (!Array.isArray(seats)) {
@@ -128,9 +147,24 @@ async function refreshSeats() {
     setMessage('The box office is connected. Select an available seat to make a reservation.', 'info');
   } catch (error) {
     seatGrid.setAttribute('aria-busy', 'false');
-    setMessage(`${error.message} Start the C server with “theatre-web.exe --server” and reload this page.`, 'error');
+    const detail = isGitHubPages
+      ? error instanceof SyntaxError
+        ? 'Saved seat data could not be read. Clear this site’s browser storage to reset bookings.'
+        : error.message
+      : `${error.message} Start the C server with “theatre-web.exe --server” and reload this page.`;
+    setMessage(detail, 'error');
     reserveButton.disabled = true;
     cancelButton.disabled = true;
+  }
+}
+
+function saveLocalSeats() {
+  try {
+    localStorage.setItem(storageKey, JSON.stringify(seats));
+    return true;
+  } catch (error) {
+    setMessage(`Could not save this booking in browser storage: ${error.message}`, 'error');
+    return false;
   }
 }
 
@@ -150,6 +184,26 @@ reserveForm.addEventListener('submit', async (event) => {
 
   reserveButton.disabled = true;
   try {
+    if (isGitHubPages) {
+      const seat = seats.find((item) => item.seatNo === seatNo);
+      if (!seat || seat.booked) {
+        throw new Error('That seat is no longer available. Please choose another seat.');
+      }
+      seat.booked = true;
+      seat.customerName = customerName;
+      if (!saveLocalSeats()) {
+        seat.booked = false;
+        seat.customerName = 'Available';
+        render();
+        return;
+      }
+      customerNameInput.value = '';
+      selectedSeatNo = null;
+      render();
+      setMessage(`Seat ${seatNo} is reserved for ${customerName}. Enjoy the show!`, 'success');
+      return;
+    }
+
     const response = await fetch('/api/reservations', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -176,6 +230,26 @@ cancelForm.addEventListener('submit', async (event) => {
 
   cancelButton.disabled = true;
   try {
+    if (isGitHubPages) {
+      const seat = seats.find((item) => item.seatNo === seatNo);
+      if (!seat || !seat.booked) {
+        throw new Error('That seat is not currently reserved.');
+      }
+      const customerName = seat.customerName;
+      seat.booked = false;
+      seat.customerName = 'Available';
+      if (!saveLocalSeats()) {
+        seat.booked = true;
+        seat.customerName = customerName;
+        render();
+        setMessage('Could not save the cancellation. The reservation is still shown.', 'error');
+        return;
+      }
+      render();
+      setMessage(`Reservation for seat ${seatNo} has been cancelled.`, 'success');
+      return;
+    }
+
     const response = await fetch(`/api/reservations/${seatNo}`, { method: 'DELETE' });
     const result = await readResponse(response);
     await refreshSeats();
