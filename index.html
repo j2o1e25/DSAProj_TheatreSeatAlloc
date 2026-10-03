@@ -3,62 +3,98 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Theatre Seat Allocation</title>
-    <link rel="stylesheet" href="styles.css" />
+    <meta name="theme-color" content="#f7f5f0" />
+    <meta name="description" content="A simple, elegant theatre seat booking desk." />
+    <title>Seat allocation | The Grand</title>
+    <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
     <div class="app-shell">
       <header class="topbar">
-        <div>
-          <p class="eyebrow">Booking Manager</p>
-          <h1>Theatre Seat Allocation System</h1>
-        </div>
+        <a class="brand" href="/" aria-label="The Grand seat allocation home">
+          <span class="brand-mark" aria-hidden="true">G</span>
+          <span class="brand-copy"><strong>THE GRAND</strong><small>SEAT ALLOCATION</small></span>
+        </a>
+        <div class="topbar-note"><span class="live-dot"></span> Box office desk <span class="topbar-divider">/</span> Tonight</div>
       </header>
 
-      <div id="message" class="message info" aria-live="polite">
-        Welcome! Select a seat or use the booking form.
-      </div>
-
-      <main class="layout">
-        <section class="panel seats-panel">
-          <div class="panel-header">
-            <h2>Seat Layout</h2>
-            <span class="pill">10 Seats</span>
+      <main>
+        <section class="intro">
+          <div>
+            <p class="eyebrow">A good evening starts here</p>
+            <h1>Find your <em>seat.</em></h1>
+            <p class="intro-copy">Choose a seat, make someone’s night, and let the show begin.</p>
           </div>
-          <div id="seatGrid" class="seat-grid" aria-label="Theatre seats"></div>
+          <div class="show-card">
+            <span class="show-icon" aria-hidden="true">✳</span>
+            <div><span class="show-label">NOW BOOKING</span><strong>Tonight at The Grand</strong><small>One room. Ten seats. A little magic.</small></div>
+          </div>
         </section>
 
-        <aside class="panel sidebar">
-          <div class="section-block">
-            <h3>Reserve a Seat</h3>
-            <form id="reserveForm" class="booking-form">
-              <label for="reserveSeat">Seat number</label>
-              <select id="reserveSeat" name="reserveSeat"></select>
+        <div id="message" class="message info" role="status" aria-live="polite">
+          <span class="message-icon" aria-hidden="true">✦</span>
+          <span id="messageText">Connecting to the box office…</span>
+        </div>
 
-              <label for="customerName">Customer name</label>
-              <input id="customerName" name="customerName" type="text" maxlength="49" placeholder="Enter customer name" />
+        <section class="stats" aria-label="Booking summary">
+          <article class="stat-card"><span class="stat-icon available-icon" aria-hidden="true">○</span><div><span>Available</span><strong id="availableCount">—</strong></div></article>
+          <article class="stat-card"><span class="stat-icon booked-icon" aria-hidden="true">●</span><div><span>Reserved</span><strong id="bookedCount">—</strong></div></article>
+          <article class="stat-card"><span class="stat-icon total-icon" aria-hidden="true">✳</span><div><span>Total seats</span><strong id="totalCount">10</strong></div></article>
+        </section>
 
-              <button type="submit" class="primary">Allocate seat</button>
-            </form>
-          </div>
+        <div class="main-grid">
+          <section class="card seating-card" aria-labelledby="seatingTitle">
+            <div class="card-heading">
+              <div><p class="eyebrow">The auditorium</p><h2 id="seatingTitle">Choose a seat</h2></div>
+              <span class="seat-count" id="seatCount">10 seats</span>
+            </div>
 
-          <div class="section-block">
-            <h3>Cancel a Reservation</h3>
-            <form id="cancelForm" class="booking-form">
-              <label for="cancelSeat">Seat number</label>
-              <select id="cancelSeat" name="cancelSeat"></select>
-              <button type="submit" class="secondary">Cancel reservation</button>
-            </form>
-          </div>
+            <div class="stage-wrap" aria-label="Stage at the front of the theatre">
+              <div class="stage-glow"></div>
+              <div class="stage"><span class="stage-star" aria-hidden="true">✦</span><span>STAGE</span></div>
+              <div class="stage-edge"></div>
+            </div>
 
-          <div class="section-block">
-            <h3>Available Seats</h3>
-            <div id="availableSeats" class="available-seats">None</div>
-          </div>
-        </aside>
+            <div id="seatGrid" class="seat-grid" role="group" aria-label="Theatre seating plan" aria-busy="true"></div>
+
+            <div class="legend" aria-label="Seat status legend">
+              <span><i class="legend-dot free"></i> Available</span>
+              <span><i class="legend-dot taken"></i> Reserved</span>
+              <span><i class="legend-dot selected"></i> Selected</span>
+            </div>
+            <p class="seating-hint">Select any seat to get started. Reserved seats show the guest’s name.</p>
+          </section>
+
+          <aside class="card booking-card" aria-label="Manage bookings">
+            <div class="booking-section">
+              <div class="section-title"><span class="step-number">01</span><div><p class="eyebrow">Make it official</p><h2>Reserve a seat</h2></div></div>
+              <form id="reserveForm" class="booking-form">
+                <label for="reserveSeat">Available seat</label>
+                <div class="select-wrap"><select id="reserveSeat" name="reserveSeat" required><option value="">Loading seats…</option></select><span aria-hidden="true">⌄</span></div>
+                <label for="customerName">Guest name</label>
+                <input id="customerName" name="customerName" type="text" maxlength="49" autocomplete="name" placeholder="e.g. Alex Morgan" required />
+                <button id="reserveButton" type="submit" class="button primary" disabled><span>Reserve this seat</span><span aria-hidden="true">↗</span></button>
+              </form>
+            </div>
+
+            <div class="booking-divider"></div>
+
+            <div class="booking-section cancel-section">
+              <div class="section-title"><span class="step-number muted-step">02</span><div><p class="eyebrow">Plans changed?</p><h2>Cancel a booking</h2></div></div>
+              <form id="cancelForm" class="booking-form">
+                <label for="cancelSeat">Reserved seat</label>
+                <div class="select-wrap"><select id="cancelSeat" name="cancelSeat" required><option value="">No reservations yet</option></select><span aria-hidden="true">⌄</span></div>
+                <button id="cancelButton" type="submit" class="button secondary" disabled>Cancel reservation</button>
+              </form>
+            </div>
+
+            <div class="booking-footnote"><span aria-hidden="true">↻</span> Changes are saved to the box office while the server is running.</div>
+          </aside>
+        </div>
       </main>
-    </div>
 
-    <script src="script.js"></script>
+      <footer class="footer"><span>THE GRAND <i>·</i> SEAT ALLOCATION</span><span>Made for a memorable evening.</span></footer>
+    </div>
+    <script src="/script.js" defer></script>
   </body>
 </html>
